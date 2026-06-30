@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Kedarling7838/sample_maven_project.git'
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                dir('maven-project') {
+                    sh 'mvn clean'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('maven-project') {
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Install') {
+            steps {
+                dir('maven-project') {
+                    sh 'mvn install'
+                }
+            }
+        }
+
+        stage('Push Artifacts into Artifactory') {
+            steps {
+                dir('maven-project') {
+                    rtUpload(
+                        serverId: 'jfrog_server',
+                        spec: '''{
+                            "files": [
+                                {
+                                    "pattern": "target/*.war",
+                                    "target": "test/"
+                                }
+                            ]
+                        }'''
+                    )
+                }
+            }
+        }
+    }
+}
